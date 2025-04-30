@@ -1,0 +1,28 @@
+[
+  {
+    "id": "1f16c357-fc0e-43d6-9e5e-1a2a9822752b",
+    "stratus": true,
+    "title": "Camiseta Básica Negra",
+    "description": "Camiseta de algodón 100% color negro, ideal para uso diario.",
+    "price": 19.99,
+    "thumbnail": [
+      "https://ejemplo.com/imagenes/camiseta-negra.jpg"
+    ],
+    "code": "CAM-NEG-001",
+    "stock": 150,
+    "category": "Ropa de Hombre",
+    "status": true
+  },
+  {
+    "id": "1f16c357-fc0e-43d6-9e5e-1a2a9822752b1",
+    "title": "Camiseta Básica Negra",
+    "description": "Camiseta de algodón 100% color negro, ideal para uso diario.",
+    "price": 19.99,
+    "thumbnail": [
+      "https://ejemplo.com/imagenes/camiseta-negra.jpg"
+    ],
+    "code": "CAM-NEG-002",
+    "stock": 150,
+    "status": true
+  }
+]
