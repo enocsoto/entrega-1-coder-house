@@ -4,7 +4,6 @@ import products from '../routes/products.js';
 import carts from '../routes/carts.js';
 import 'dotenv/config';
 
-
 export class Server {
   constructor() {
     this.app = express();
@@ -13,13 +12,17 @@ export class Server {
     this.routes();
   }
 
-  middlewares(){
+  middlewares() {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    this.app.use(cors());
+    this.app.use(cors({
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type'],
+    }));
   }
 
-  routes(){
+  routes() {
     this.app.use('/api/products', products);
     this.app.use('/api/carts', carts);
   }
@@ -29,6 +32,4 @@ export class Server {
       console.log(`Server is running on port ${this.port}`);
     });
   }
-    
-
 }

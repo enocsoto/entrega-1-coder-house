@@ -18,6 +18,7 @@ El servidor debe estar basado en **Node.js** y **Express**, y debe escuchar en e
 
 - **POST /**:  
   Debe agregar un nuevo producto con los siguientes campos:
+
   - `id`: Number/String (No se manda desde el body, se autogenera para asegurar que nunca se repitan los ids).
   - `title`: String
   - `description`: String
@@ -38,6 +39,7 @@ El servidor debe estar basado en **Node.js** y **Express**, y debe escuchar en e
 
 - **POST /**:  
   Debe crear un nuevo carrito con la siguiente estructura:
+
   - `id`: Number/String (Autogenerado para asegurar que nunca se dupliquen los ids).
   - `products`: Array que contendrá objetos que representen cada producto.
 
