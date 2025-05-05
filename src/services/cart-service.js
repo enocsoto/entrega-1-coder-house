@@ -14,16 +14,15 @@ class CartService {
       const products = [];
 
       for (const cartProduct of cart.products) {
-      const product = await this.ProductManager.getProductById(cartProduct.id);
-      if (!product) {
-        throw new Error(`Producto con ID ${cartProduct.id} no encontrado`);
+        const product = await this.ProductManager.getProductById(cartProduct.id);
+        if (!product) {
+          throw new Error(`Product with ID ${cartProduct.id} not found`);
+        }
+        products.push({ ...product, quantity: cartProduct.quantity });
       }
-      products.push({ ...product, quantity: cartProduct.quantity });
-      }
-
       return { cartId: cart.id, products };
     } catch (error) {
-      throw new Error(`Error al obtener el carrito: ${error.message}`);
+      throw new Error(`${error.message}`);
     }
   }
 
@@ -33,11 +32,7 @@ class CartService {
       const newCart = { id: cartId, products: [] };
       return await this.CartManager.addCart(newCart);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new Error('Error de validación: ' + error.errors.map((e) => e.message).join(', '));
-      } else {
-        throw new Error(`Error al crear el carrito: ${error.message}`);
-      }
+      throw new Error(`${error.message}`);
     }
   }
 
@@ -54,13 +49,9 @@ class CartService {
       } else {
         cart.products.push({ id: productId, quantity: 1 });
       }
-
       return await this.CartManager.updateCart(cartId, cart);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new Error('Error de validación: ' + error.errors.map((e) => e.message).join(', '));
-      }
-      throw new Error(`Error al agregar el producto al carrito: ${error.message}`);
+      throw new Error(`${error.message}`);
     }
   }
 }

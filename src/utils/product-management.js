@@ -89,7 +89,7 @@ class ProductManager {
       }
       this.products.splice(productIndex, 1)[0];
       await this.saveProducts();
-      return;
+      return true;
     } catch (error) {
       throw new Error(`Error deleting product: ${error.message}`);
     }
