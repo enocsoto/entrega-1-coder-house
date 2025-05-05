@@ -1,4 +1,4 @@
-import { CartSchema, uuidSchema } from '../dto/index.js';
+import { uuidSchema } from '../dto/index.js';
 import { v4 as uuid } from 'uuid';
 import { ProductManager, CartManager } from '../utils/index.js';
 class CartService {
@@ -10,7 +10,18 @@ class CartService {
   async getCartById(id) {
     try {
       uuidSchema.parse(id);
-      return await this.CartManager.getCartById(id);
+      const cart = await this.CartManager.getCartById(id);
+      const products = [];
+
+      for (const cartProduct of cart.products) {
+      const product = await this.ProductManager.getProductById(cartProduct.id);
+      if (!product) {
+        throw new Error(`Producto con ID ${cartProduct.id} no encontrado`);
+      }
+      products.push({ ...product, quantity: cartProduct.quantity });
+      }
+
+      return { cartId: cart.id, products };
     } catch (error) {
       throw new Error(`Error al obtener el carrito: ${error.message}`);
     }
