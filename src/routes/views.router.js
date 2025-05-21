@@ -1,21 +1,22 @@
 import express from 'express';
-import { getProducts } from '../utils/productUtils.js';
+import { ProductManager } from '../utils/index.js';
 
 const router = express.Router();
+const productManager = new ProductManager();
 
-// Ruta para la vista home
-router.get('/', (req, res) => {
-  const products = getProducts();
-  res.render('home', { 
+router.get('/', async (_req, res) => {
+  const products = await productManager.getProducts();
+  res.render('home', {
     products,
-    home: true 
+    home: true,
   });
 });
 
-// Ruta para la vista realTimeProducts
-router.get('/realtimeproducts', (req, res) => {
+router.get('/realtimeproducts', (_req, res) => {
+  const products = productManager.getProducts();
   res.render('realTimeProducts', {
-    realtime: true
+    products,
+    realtime: true,
   });
 });
 
