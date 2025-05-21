@@ -1,0 +1,24 @@
+<div class="home-header">
+    <h1>Products List</h1>
+</div>
+
+<div class="product-list">
+    {{#if products.length}}
+        {{#each products}}
+            <div class="product-card">
+                <h3>{{title}}</h3>
+                <p><strong>Description:</strong> {{description}}</p>
+                <p><strong>Price:</strong> ${{price}}</p>
+                <p><strong>Code:</strong> {{code}}</p>
+                <p><strong>Status:</strong> <span class="{{#if status}}status-available{{else}}status-unavailable{{/if}}">{{#if status}}Available{{else}}Not Available{{/if}}</span></p>
+                <p><strong>Stock:</strong> {{stock}}</p>
+                <p><strong>Category:</strong> {{category}}</p>
+                <p><strong>Image Url:</strong> {{thumbnails}}</p>
+                <p><strong>Id:</strong> {{_id}}</p>
+                <button class="add-button" data-id="{{_id}}">Add to Cart</button>
+            </div>
+        {{/each}}
+    {{else}}
+        <p>No products to display.</p>
+    {{/if}}
+</div>

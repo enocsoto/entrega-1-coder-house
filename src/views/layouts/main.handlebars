@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda Online</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    {{#if home}}
+    <link rel="stylesheet" href="/css/home.css">
+    {{/if}}
+    {{#if realtime}}
+    <link rel="stylesheet" href="/css/realtime.css">
+    {{/if}}
+</head>
+<body>
+    <nav>
+        <div class="nav-links">
+            <a href="/">Inicio</a>
+            <a href="/realtimeproducts">Productos en Tiempo Real</a>
+        </div>
+        <div class="theme-switch">
+            <span class="theme-switch-label">Modo Oscuro</span>
+            <label class="switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </nav>
+    
+    {{{body}}}
+
+    <script>
+        // Script para cambiar entre modos claro y oscuro
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Verificar si hay una preferencia guardada
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.checked = true;
+            }
+            
+            // Cambiar tema cuando se hace clic en el switch
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
