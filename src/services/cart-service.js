@@ -1,7 +1,7 @@
 import { uuidSchema } from '../dto/index.js';
 import { v4 as uuid } from 'uuid';
 import { ProductManager, CartManager } from '../utils/index.js';
-class CartService {
+export class CartService {
   constructor() {
     this.CartManager = new CartManager();
     this.ProductManager = new ProductManager();
@@ -55,5 +55,3 @@ class CartService {
     }
   }
 }
-
-export default CartService;
