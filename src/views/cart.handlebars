@@ -1,0 +1,199 @@
+<div class="cart-header">
+    <h1>Your Shopping Cart</h1>
+</div>
+
+{{#if cart.products.length}}
+    <div class="cart-container">
+        <div class="cart-items">
+            {{#each cart.products}}
+                <div class="cart-item" data-product-id="{{this.product._id}}">
+                    <div class="cart-item-image">
+                        {{#if this.product.thumbnails.length}}
+                            <img src="{{this.product.thumbnails.[0]}}" alt="{{this.product.title}}">
+                        {{else}}
+                            <div class="no-image">No image</div>
+                        {{/if}}
+                    </div>
+                    <div class="cart-item-details">
+                        <h3>{{this.product.title}}</h3>
+                        <p class="cart-item-price">Price: ${{this.product.price}}</p>
+                        <div class="cart-item-quantity">
+                            <label for="quantity-{{this.product._id}}">Quantity:</label>
+                            <div class="quantity-controls">
+                                <button class="quantity-btn decrease" data-product-id="{{this.product._id}}">-</button>
+                                <input type="number" id="quantity-{{this.product._id}}" class="quantity-input" value="{{this.quantity}}" min="1" data-product-id="{{this.product._id}}">
+                                <button class="quantity-btn increase" data-product-id="{{this.product._id}}">+</button>
+                            </div>
+                        </div>
+                        <p class="cart-item-subtotal">Subtotal: $<span class="subtotal-value">{{multiply this.product.price this.quantity}}</span></p>
+                    </div>
+                    <button class="remove-item-btn" data-product-id="{{this.product._id}}">Remove</button>
+                </div>
+            {{/each}}
+        </div>
+
+        <div class="cart-summary">
+            <h2>Order Summary</h2>
+            <div class="cart-total">
+                <p>Total: $<span id="cart-total-value">{{calculateTotal cart.products}}</span></p>
+            </div>
+            <div class="cart-actions">
+                <button id="checkout-btn" class="checkout-btn">Proceed to Checkout</button>
+                <button id="clear-cart-btn" class="clear-cart-btn">Clear Cart</button>
+            </div>
+        </div>
+    </div>
+{{else}}
+    <div class="empty-cart">
+        <p>Your cart is empty.</p>
+        <a href="/products" class="continue-shopping-btn">Continue Shopping</a>
+    </div>
+{{/if}}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cartId = '{{cart._id}}';
+        
+        // Función para calcular el subtotal de un item
+        function calculateSubtotal(price, quantity) {
+            return (price * quantity).toFixed(2);
+        }
+        
+        // Función para calcular el total del carrito
+        function updateCartTotal() {
+            let total = 0;
+            document.querySelectorAll('.cart-item').forEach(item => {
+                const price = parseFloat(item.querySelector('.cart-item-price').textContent.replace('Price: $', ''));
+                const quantity = parseInt(item.querySelector('.quantity-input').value);
+                total += price * quantity;
+            });
+            document.getElementById('cart-total-value').textContent = total.toFixed(2);
+        }
+        
+        // Manejar cambios en la cantidad
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', async function() {
+                const productId = this.getAttribute('data-product-id');
+                const quantity = parseInt(this.value);
+                const cartItem = this.closest('.cart-item');
+                
+                if (quantity < 1) {
+                    this.value = 1;
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ quantity })
+                    });
+                    
+                    if (response.ok) {
+                        // Actualizar subtotal
+                        const price = parseFloat(cartItem.querySelector('.cart-item-price').textContent.replace('Price: $', ''));
+                        const subtotalElement = cartItem.querySelector('.subtotal-value');
+                        subtotalElement.textContent = calculateSubtotal(price, quantity);
+                        
+                        // Actualizar total
+                        updateCartTotal();
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.message || 'Could not update quantity'}`);
+                    }
+                } catch (error) {
+                    console.error('Error updating quantity:', error);
+                    alert('An error occurred while updating the quantity');
+                }
+            });
+        });
+        
+        // Botones de incremento y decremento
+        document.querySelectorAll('.quantity-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const input = document.getElementById(`quantity-${productId}`);
+                let value = parseInt(input.value);
+                
+                if (this.classList.contains('decrease')) {
+                    if (value > 1) {
+                        input.value = value - 1;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                } else if (this.classList.contains('increase')) {
+                    input.value = value + 1;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+        
+        // Eliminar producto del carrito
+        document.querySelectorAll('.remove-item-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const productId = this.getAttribute('data-product-id');
+                const cartItem = this.closest('.cart-item');
+                
+                try {
+                    const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        cartItem.remove();
+                        updateCartTotal();
+                        
+                        // Si no quedan productos, mostrar mensaje de carrito vacío
+                        if (document.querySelectorAll('.cart-item').length === 0) {
+                            document.querySelector('.cart-container').innerHTML = `
+                                <div class="empty-cart">
+                                    <p>Your cart is empty.</p>
+                                    <a href="/products" class="continue-shopping-btn">Continue Shopping</a>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.message || 'Could not remove product'}`);
+                    }
+                } catch (error) {
+                    console.error('Error removing product:', error);
+                    alert('An error occurred while removing the product');
+                }
+            });
+        });
+        
+        // Vaciar carrito
+        const clearCartBtn = document.getElementById('clear-cart-btn');
+        if (clearCartBtn) {
+            clearCartBtn.addEventListener('click', async function() {
+                if (confirm('Are you sure you want to clear your cart?')) {
+                    try {
+                        const response = await fetch(`/api/carts/${cartId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            const errorData = await response.json();
+                            alert(`Error: ${errorData.message || 'Could not clear cart'}`);
+                        }
+                    } catch (error) {
+                        console.error('Error clearing cart:', error);
+                        alert('An error occurred while clearing the cart');
+                    }
+                }
+            });
+        }
+        
+        // Proceder al checkout (puedes implementar esta funcionalidad más adelante)
+        const checkoutBtn = document.getElementById('checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener('click', function() {
+                alert('Checkout functionality will be implemented in a future update.');
+            });
+        }
+    });
+</script>

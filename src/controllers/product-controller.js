@@ -3,12 +3,12 @@ import { ProductService } from '../services/product-service.js';
 const productService = new ProductService();
 
 export class ProductController {
-  static async getAllProducts(_req, res) {
+  static async getAllProducts(req, res) {
     try {
-      const products = await productService.getAllProducts();
-      res.status(200).json(products);
+      const result = await productService.getAllProducts(req.query);
+      res.status(200).json(result);
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching products', error });
+      res.status(500).json({ message: 'Error fetching products', error: error?.message });
     }
   }
 

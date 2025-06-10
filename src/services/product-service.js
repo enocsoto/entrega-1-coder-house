@@ -1,13 +1,15 @@
-import { ProductManager } from '../utils/index.js';
-import { productSchema, uuidSchema } from '../dto/product-schema.dto.js';
+import { ProductRepository } from '../repositories/index.js';
+import { productSchema } from '../dto/product-schema.dto.js';
+import mongoose from 'mongoose';
+
 export class ProductService {
   constructor() {
-    this.productManager = new ProductManager();
+    this.productRepository = new ProductRepository();
   }
 
-  async getAllProducts() {
+  async getAllProducts(options = {}) {
     try {
-      return await this.productManager.getProducts();
+      return await this.productRepository.getAll(options);
     } catch (error) {
       throw new Error(`${error.message}`);
     }
@@ -15,8 +17,10 @@ export class ProductService {
 
   async getProductById(id) {
     try {
-      uuidSchema.parse(id);
-      return await this.productManager.getProductById(id);
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid product ID format');
+      }
+      return await this.productRepository.getById(id);
     } catch (error) {
       throw new Error(`${error.message}`);
     }
@@ -25,13 +29,7 @@ export class ProductService {
   async createProduct(productData) {
     try {
       const validatedData = productSchema.parse(productData);
-      if (validatedData.code) {
-        const products = await this.productManager.getProducts();
-        if (products.some((product) => product.code === validatedData.code)) {
-          throw new Error(`The product code already exists`);
-        }
-      }
-      return await this.productManager.addProduct(validatedData);
+      return await this.productRepository.create(validatedData);
     } catch (error) {
       throw new Error(`${error.message}`);
     }
@@ -39,11 +37,14 @@ export class ProductService {
 
   async updateProduct(productId, updateData) {
     try {
+      if (!mongoose.Types.ObjectId.isValid(productId)) {
+        throw new Error('Invalid product ID format');
+      }
       if (updateData.id) {
         throw new Error(`Updating the product ID is not allowed`);
       }
       const validatedData = productSchema.partial().parse(updateData);
-      return await this.productManager.updateProduct(productId, validatedData);
+      return await this.productRepository.update(productId, validatedData);
     } catch (error) {
       throw new Error(`${error.message}`);
     }
@@ -51,7 +52,10 @@ export class ProductService {
 
   async deleteProduct(id) {
     try {
-      return await this.productManager.deleteProduct(id);
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid product ID format');
+      }
+      return await this.productRepository.delete(id);
     } catch (error) {
       throw new Error(`${error.message}`);
     }
