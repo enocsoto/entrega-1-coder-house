@@ -6,14 +6,16 @@
     {{#if products.length}}
         {{#each products}}
             <div class="product-card">
-                <h3>{{title}}</h3>
-                <p><strong>Description:</strong> {{description}}</p>
-                <p><strong>Price:</strong> ${{price}}</p>
-                <p><strong>Code:</strong> {{code}}</p>
-                <p><strong>Status:</strong> <span class="{{#if status}}status-available{{else}}status-unavailable{{/if}}">{{#if status}}Available{{else}}Not Available{{/if}}</span></p>
-                <p><strong>Stock:</strong> {{stock}}</p>
-                <p><strong>Category:</strong> {{category}}</p>
-                <p><strong>Image Url:</strong> {{thumbnails}}</p>
+                <a href="/products/{{_id}}" class="product-link">
+                    <h3>{{title}}</h3>
+                    <p><strong>Description:</strong> {{description}}</p>
+                    <p><strong>Price:</strong> ${{price}}</p>
+                    <p><strong>Code:</strong> {{code}}</p>
+                    <p><strong>Status:</strong> <span class="{{#if status}}status-available{{else}}status-unavailable{{/if}}">{{#if status}}Available{{else}}Not Available{{/if}}</span></p>
+                    <p><strong>Stock:</strong> {{stock}}</p>
+                    <p><strong>Category:</strong> {{category}}</p>
+                    <p><strong>Image Url:</strong> <span class="url-text">{{thumbnails}}</span></p>
+                </a>
             </div>
         {{/each}}
     {{else}}

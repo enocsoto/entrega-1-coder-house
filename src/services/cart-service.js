@@ -1,21 +1,17 @@
-import { CartRepository, ProductRepository } from '../repositories/index.js';
-import mongoose from 'mongoose';
+import { Cart, Product } from '../models/index.js';
+import { isMongoIdValid } from '../utils/validMongoIdValid.js';
 
 export class CartService {
-  constructor() {
-    this.cartRepository = new CartRepository();
-    this.productRepository = new ProductRepository();
-  }
-
   async getCartById(id) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new Error('Invalid cart ID format');
+      isMongoIdValid(id);
+      const cart = await Cart.findById(id).populate('products.product');
+      if (!cart) {
+        throw new Error('Cart not found');
       }
-      const cart = await this.cartRepository.getById(id);
       return cart;
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error getting cart: ${error.message}`);
     }
   }
 
@@ -25,12 +21,17 @@ export class CartService {
       if (!Array.isArray(products)) {
         throw new Error('Products must be an array');
       }
-      const cart =[];
+      const cart = [];
       for (const item of products) {
         if (!item.id || !mongoose.Types.ObjectId.isValid(item.id)) {
           throw new Error('Invalid product ID format in products array');
         }
-         cart.push(await this.cartRepository.create(item.id));
+        const product = await Product.findById(item.id);
+        if (!product) {
+          throw new Error(`Product with ID ${item.id} not found`);
+        }
+        const newCart = new Cart({ products: [{ product: item.id }] });
+        cart.push(await newCart.save());
       }
 
       if (!cart) {
@@ -38,102 +39,139 @@ export class CartService {
       }
       return cart;
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error creating cart: ${error.message}`);
     }
   }
 
   async addProductToCart(cartId, productId, quantity = 1) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(cartId)) {
-        throw new Error('Invalid cart ID format');
-      }
-      if (!mongoose.Types.ObjectId.isValid(productId)) {
-        throw new Error('Invalid product ID format');
-      }
+      isMongoIdValid(cartId);
+      isMongoIdValid(productId);
 
       // Verify product exists
-      const product = await this.productRepository.getById(productId);
-      if (!product) {
-        throw new Error(`Product with ID ${productId} not found`);
+      const [product, cart] = await Promise.all([
+        Product.findById(productId),
+        Cart.findById(cartId)
+      ]);
+
+      if (!product || !cart) {
+        throw new Error('Product or cart not found');
       }
 
-      return await this.cartRepository.addProduct(cartId, productId, quantity);
+      // Check if product already exists in cart
+      const productIndex = cart.products.findIndex((item) => item.product.toString() === productId);
+
+      if (productIndex !== -1) {
+        // Product exists, update quantity
+        cart.products[productIndex].quantity += quantity;
+      } else {
+        // Product doesn't exist, add it
+        cart.products.push({ product: productId, quantity });
+      }
+
+      return await cart.save();
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error adding product to cart: ${error.message}`);
     }
   }
 
   async updateProductQuantity(cartId, productId, quantity) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(cartId)) {
-        throw new Error('Invalid cart ID format');
+      isMongoIdValid(cartId);
+      isMongoIdValid(productId);
+
+      if (!quantity || isNaN(quantity) || quantity <= 0) {
+        throw new Error('Quantity must be a positive number');
       }
-      if (!mongoose.Types.ObjectId.isValid(productId)) {
-        throw new Error('Invalid product ID format');
-      }
-      if (quantity <= 0) {
-        throw new Error('Quantity must be greater than 0');
+      const [product, cart] = await Promise.all([Product.findById(productId), Cart.findById(cartId)]);
+
+      if (!product || !cart) {
+        throw new Error('Product or cart not found');
       }
 
-      return await this.cartRepository.updateProductQuantity(cartId, productId, quantity);
+      const productIndex = cart.products.findIndex((item) => item.product.id.toString() === productId);
+
+      if (productIndex === -1) {
+        throw new Error('Product not found in cart');
+      }
+
+      cart. products[productIndex].quantity = quantity;
+      return await cart.save();
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error updating product quantity: ${error.message}`);
     }
   }
 
   async updateCart(cartId, products) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(cartId)) {
-        throw new Error('Invalid cart ID format');
-      }
+      isMongoIdValid(cartId);
 
-      // Validar que todos los productos tengan un ID válido
       if (!Array.isArray(products)) {
         throw new Error('Products must be an array');
       }
-
+      const productsToUpdate = [];
       for (const item of products) {
-        if (!item.product || !mongoose.Types.ObjectId.isValid(item.product)) {
-          throw new Error('Invalid product ID format in products array');
-        }
-        if (!item.quantity || item.quantity <= 0) {
+          isMongoIdValid(item.id);
+        
+          if (!item.quantity || item.quantity <= 0) {
           throw new Error('Quantity must be greater than 0 for all products');
-        }
-
-        // Verificar que el producto existe
-        await this.productRepository.getById(item.product);
+          }
+          productsToUpdate.push({
+            product: item.id,
+            quantity: item.quantity,
+          });
       }
 
-      return await this.cartRepository.updateCart(cartId, products);
+    const productExistenceChecks = products.map((item) => Product.findById(item.id));
+    const foundProducts = await Promise.all(productExistenceChecks);
+
+      if (foundProducts.some((product) => !product)) {
+        throw new Error('One or more products in the provided list were not found in the database.');
+      }
+      const cart = await Cart.findById(cartId);
+      
+      if (!cart) {
+        throw new Error('Cart not found');
+      }
+      cart.products = productsToUpdate;
+
+      return await cart.save();
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error updating cart: ${error.message}`);
     }
   }
 
   async removeProductFromCart(cartId, productId) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(cartId)) {
-        throw new Error('Invalid cart ID format');
-      }
-      if (!mongoose.Types.ObjectId.isValid(productId)) {
-        throw new Error('Invalid product ID format');
+      isMongoIdValid(cartId);
+      isMongoIdValid(productId);
+
+      const cart = await Cart.findById(cartId);
+      if (!cart) {
+        throw new Error('Cart not found');
       }
 
-      return await this.cartRepository.removeProduct(cartId, productId);
+      cart.products = cart.products.filter((item) => item.product.id.toString() !== productId);
+
+      return await cart.save();
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error removing product from cart: ${error.message}`);
     }
   }
 
   async clearCart(cartId) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(cartId)) {
-        throw new Error('Invalid cart ID format');
+      isMongoIdValid(cartId);
+
+      const cart = await Cart.findById(cartId);
+      if (!cart) {
+        throw new Error('Cart not found');
       }
 
-      return await this.cartRepository.clearCart(cartId);
+      cart.products = [];
+      return await cart.save();
     } catch (error) {
-      throw new Error(`${error.message}`);
+      throw new Error(`Error clearing cart: ${error.message}`);
     }
   }
 }

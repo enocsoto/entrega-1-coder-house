@@ -7,10 +7,10 @@ import path from 'path';
 import products from '../routes/products.js';
 import carts from '../routes/carts.js';
 import viewsRouter from '../routes/views.router.js';
-import { ProductRepository } from '../repositories/index.js';
 import { connectDB } from '../config/db.js';
 import 'dotenv/config';
 import { fileURLToPath } from 'url';
+import { ProductService } from '../services/product-service.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -20,7 +20,7 @@ export class Server {
     this.port = process.env.PORT || 3000;
     this.server = HttpServer(this.app);
     this.io = new IOServer(this.server);
-    this.productRepository = new ProductRepository();
+    this.productRepository = new ProductService();
     
     this.setupHandlebars();
     this.middlewares();

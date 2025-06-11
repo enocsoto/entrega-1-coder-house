@@ -48,10 +48,6 @@ export class CartController {
       const { cid, pid } = req.params;
       const { quantity } = req.body;
       
-      if (!quantity || isNaN(quantity) || quantity <= 0) {
-        return res.status(400).json({ message: 'Quantity must be a positive number' });
-      }
-      
       const updatedCart = await cartService.updateProductQuantity(cid, pid, quantity);
       res.status(200).json(updatedCart);
     } catch (error) {

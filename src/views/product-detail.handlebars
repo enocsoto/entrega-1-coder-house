@@ -2,11 +2,10 @@
     <div class="product-detail-header">
         <h1>{{product.title}}</h1>
     </div>
-
     <div class="product-detail-content">
         <div class="product-detail-image">
             {{#if product.thumbnails.length}}
-                <img src="{{product.thumbnails.[0]}}" alt="{{product.title}}">
+            <p><strong>Image Url:</strong> <span class="url-text">{{product.thumbnails.[0]}}</span></p>
             {{else}}
                 <div class="no-image">No image available</div>
             {{/if}}
@@ -23,17 +22,17 @@
                 <ul class="product-details-list">
                     <li><strong>Price:</strong> ${{product.price}}</li>
                     <li><strong>Code:</strong> {{product.code}}</li>
-                    <li><strong>Status:</strong> <span class="{{#if product.status}}status-available{{else}}status-unavailable{{/if}}">{{#if product.status}}Available{{else}}Not Available{{/if}}</span></li>
+                    <li><strong>Status:</strong> <span class="status-indicator {{#if product.status}}text-success{{else}}text-danger{{/if}}">{{#if product.status}}Available{{else}}Not Available{{/if}}</span></li>
                     <li><strong>Stock:</strong> {{product.stock}}</li>
                     <li><strong>Category:</strong> {{product.category}}</li>
                 </ul>
             </div>
 
             <div class="product-detail-actions">
-                <button id="addToCartBtn" class="add-to-cart-btn" data-product-id="{{product._id}}" {{#unless product.status}}disabled{{/unless}}>
+                <button id="addToCartBtn" class="add-to-cart-btn" data-product-id="{{product.id}}" {{#unless product.status}}disabled{{/unless}}>
                     {{#if product.status}}Add to Cart{{else}}Out of Stock{{/if}}
                 </button>
-                <a href="/products" class="back-to-products-btn">Back to Products</a>
+                <a href="/" class="back-to-products-btn">Back to Products</a>
             </div>
         </div>
     </div>
@@ -47,10 +46,8 @@
             addToCartBtn.addEventListener('click', async function() {
                 const productId = this.getAttribute('data-product-id');
                 try {
-                    // Obtener el ID del carrito del usuario (puedes almacenarlo en localStorage)
                     let cartId = localStorage.getItem('cartId');
                     
-                    // Si no hay un carrito, crear uno nuevo
                     if (!cartId) {
                         const response = await fetch('/api/carts', {
                             method: 'POST'
@@ -60,7 +57,6 @@
                         localStorage.setItem('cartId', cartId);
                     }
                     
-                    // Agregar el producto al carrito
                     const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
                         method: 'POST',
                         headers: {
