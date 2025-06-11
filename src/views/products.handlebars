@@ -1,0 +1,131 @@
+<div class="products-header">
+    <h1>Products List</h1>
+</div>
+
+<div class="filters-container">
+    <form id="filterForm" class="filter-form">
+        <div class="filter-group">
+            <label for="category">Category:</label>
+            <select id="category" name="category">
+                <option value="">All Categories</option>
+                {{#each categories}}
+                    <option value="{{this}}" {{#if (eq ../selectedCategory this)}}selected{{/if}}>{{this}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="status">Status:</label>
+            <select id="status" name="status">
+                <option value="">All</option>
+                <option value="true" {{#if (eq selectedStatus "true")}}selected{{/if}}>Available</option>
+                <option value="false" {{#if (eq selectedStatus "false")}}selected{{/if}}>Not Available</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="sort">Sort by Price:</label>
+            <select id="sort" name="sort">
+                <option value="">No Sort</option>
+                <option value="asc" {{#if (eq sort "asc")}}selected{{/if}}>Lowest to Highest</option>
+                <option value="desc" {{#if (eq sort "desc")}}selected{{/if}}>Highest to Lowest</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="limit">Items per page:</label>
+            <select id="limit" name="limit">
+                <option value="10" {{#if (eq limit 10)}}selected{{/if}}>10</option>
+                <option value="20" {{#if (eq limit 20)}}selected{{/if}}>20</option>
+                <option value="50" {{#if (eq limit 50)}}selected{{/if}}>50</option>
+            </select>
+        </div>
+        <button type="submit" class="filter-button">Apply Filters</button>
+    </form>
+</div>
+
+<div class="product-list">
+    {{#if products.length}}
+        {{#each products}}
+            <div class="product-card">
+                <h3>{{this.title}}</h3>
+                <p><strong>Description:</strong> {{this.description}}</p>
+                <p><strong>Price:</strong> ${{this.price}}</p>
+                <p><strong>Code:</strong> {{this.code}}</p>
+                <p><strong>Status:</strong> <span class="{{#if this.status}}status-available{{else}}status-unavailable{{/if}}">{{#if this.status}}Available{{else}}Not Available{{/if}}</span></p>
+                <p><strong>Stock:</strong> {{this.stock}}</p>
+                <p><strong>Category:</strong> {{this.category}}</p>
+                {{#if this.thumbnails.length}}
+                    <div class="product-image">
+                        <img src="{{this.thumbnails.[0]}}" alt="{{this.title}}">
+                    </div>
+                {{/if}}
+                <div class="product-actions">
+                    <a href="/products/{{this._id}}" class="view-details-btn">View Details</a>
+                    <button class="add-to-cart-btn" data-product-id="{{this._id}}">Add to Cart</button>
+                </div>
+            </div>
+        {{/each}}
+    {{else}}
+        <p>No products to display.</p>
+    {{/if}}
+</div>
+
+<div class="pagination">
+    {{#if hasPrevPage}}
+        <a href="{{prevLink}}" class="pagination-btn">Previous</a>
+    {{else}}
+        <span class="pagination-btn disabled">Previous</span>
+    {{/if}}
+    
+    <span class="pagination-info">Page {{page}} of {{totalPages}}</span>
+    
+    {{#if hasNextPage}}
+        <a href="{{nextLink}}" class="pagination-btn">Next</a>
+    {{else}}
+        <span class="pagination-btn disabled">Next</span>
+    {{/if}}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Manejar el evento de agregar al carrito
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const productId = this.getAttribute('data-product-id');
+                try {
+                    // Obtener el ID del carrito del usuario (puedes almacenarlo en localStorage)
+                    let cartId = localStorage.getItem('cartId');
+                    
+                    // Si no hay un carrito, crear uno nuevo
+                    if (!cartId) {
+                        const response = await fetch('/api/carts', {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+                        cartId = data._id;
+                        localStorage.setItem('cartId', cartId);
+                    }
+                    
+                    // Agregar el producto al carrito
+                    const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ quantity: 1 })
+                    });
+                    
+                    if (response.ok) {
+                        alert('Product added to cart successfully!');
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.message || 'Could not add product to cart'}`);
+                    }
+                } catch (error) {
+                    console.error('Error adding product to cart:', error);
+                    alert('An error occurred while adding the product to cart');
+                }
+            });
+        });
+    });
+</script>

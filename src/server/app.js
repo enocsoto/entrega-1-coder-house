@@ -7,9 +7,10 @@ import path from 'path';
 import products from '../routes/products.js';
 import carts from '../routes/carts.js';
 import viewsRouter from '../routes/views.router.js';
-import { ProductManager } from '../utils/product-management.js';
+import { connectDB } from '../config/db.js';
 import 'dotenv/config';
 import { fileURLToPath } from 'url';
+import { ProductService } from '../services/product-service.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,12 +20,23 @@ export class Server {
     this.port = process.env.PORT || 3000;
     this.server = HttpServer(this.app);
     this.io = new IOServer(this.server);
-    this.productManager = new ProductManager();
+    this.productRepository = new ProductService();
     
     this.setupHandlebars();
     this.middlewares();
+    this.connectToDatabase();
     this.routes();
     this.setupSockets();
+  }
+
+  async connectToDatabase() {
+    try {
+      await connectDB();
+      console.log('Connected to MongoDB');
+    } catch (error) {
+      console.error('Failed to connect to MongoDB:', error.message);
+      process.exit(1);
+    }
   }
 
   setupHandlebars() {
@@ -58,17 +70,17 @@ export class Server {
       
       try {
         // Send initial product list to the connected client
-        const products = await this.productManager.getProducts();
+        const products = await this.productRepository.getAll();
         socket.emit('products', products);
         
         // Listen for new product events
         socket.on('newProduct', async (product) => {
           try {
-            // Add the product using ProductManager
-            await this.productManager.addProduct(product);
+            // Add the product using ProductRepository
+            await this.productRepository.create(product);
             
             //  Get the updated product list
-            const updatedProducts = await this.productManager.getProducts();
+            const updatedProducts = await this.productRepository.getAll();
             
             // Emit the updated product list to all connected clients
             this.io.emit('products', updatedProducts);
@@ -80,11 +92,11 @@ export class Server {
         // Listen for delete product events
         socket.on('deleteProduct', async (productId) => {
           try {
-            // Delete the product using ProductManager
-            await this.productManager.deleteProduct(productId);
+            // Delete the product using ProductRepository
+            await this.productRepository.delete(productId);
             
             // Get the updated product list
-            const updatedProducts = await this.productManager.getProducts();
+            const updatedProducts = await this.productRepository.getAll();
             
             // Emit the updated product list to all connected clients
             this.io.emit('products', updatedProducts);
