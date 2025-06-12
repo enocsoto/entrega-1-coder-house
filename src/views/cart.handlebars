@@ -8,8 +8,8 @@
             {{#each cart.products}}
                 <div class="cart-item" data-product-id="{{this.product._id}}">
                     <div class="cart-item-image">
-                        {{#if this.product.thumbnails.length}}
-                            <img src="{{this.product.thumbnails.[0]}}" alt="{{this.product.title}}">
+                        {{#if this.product.thumbnails}}
+                            <label src="{{this.product.thumbnails}}" alt="{{this.product.title}}"></label>
                         {{else}}
                             <div class="no-image">No image</div>
                         {{/if}}
@@ -38,7 +38,6 @@
                 <p>Total: $<span id="cart-total-value">{{calculateTotal cart.products}}</span></p>
             </div>
             <div class="cart-actions">
-                <button id="checkout-btn" class="checkout-btn">Proceed to Checkout</button>
                 <button id="clear-cart-btn" class="clear-cart-btn">Clear Cart</button>
             </div>
         </div>

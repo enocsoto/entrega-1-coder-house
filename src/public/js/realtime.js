@@ -34,7 +34,12 @@ function updateProductList(products) {
             <p><strong>Stock:</strong> ${product.stock}</p>
             <p><strong>Category:</strong> ${product.category}</p>
             ${thumbnailsHtml}
-            <button class="delete" data-id="${product._id}">Delete</button>
+            <div class="product-actions">
+                <button class="delete" data-id="${product._id}">Delete</button>
+                <button class="add-to-cart" data-id="${product._id}" ${!product.status ? 'disabled' : ''}>
+                    ${product.status ? 'Add to Cart' : 'Out of Stock'}
+                </button>
+            </div>
         `;
         
         productList.appendChild(productCard);
@@ -47,6 +52,46 @@ function updateProductList(products) {
             socket.emit('deleteProduct', productId);
         });
     });
+
+    // Agregar event listeners a los botones de agregar al carrito
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', async () => {
+            const productId = button.getAttribute('data-id');
+            try {
+                let cartId = localStorage.getItem('cartId');
+                
+                if (!cartId) {
+                    const response = await fetch('/api/carts', {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    cartId = data._id;
+                    localStorage.setItem('cartId', cartId);
+                }
+                
+                const response = await fetch(`/api/carts/${cartId}/products/${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ quantity: 1 })
+                });
+                
+                if (response.ok) {
+                    const result = confirm('Product added to cart successfully! Would you like to view your cart?');
+                    if (result) {
+                        window.location.href = `/cart/${cartId}`;
+                    }
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message || 'Could not add product to cart'}`);
+                }
+            } catch (error) {
+                console.error('Error adding product to cart:', error);
+                alert('An error occurred while adding the product to cart');
+            }
+        });
+    });
 }
 
 // Manejar el envío del formulario
@@ -54,58 +99,16 @@ productForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
     const newProduct = {
-        title: document.querySelector('#title').value,
-        description: document.querySelector('#description').value,
-        code: document.querySelector('#code').value,
-        price: parseFloat(document.querySelector('#price').value),
-        status: document.querySelector('#status').value === 'true',
-        stock: parseInt(document.querySelector('#stock').value),
-        category: document.querySelector('#category').value,
-        thumbnails: getThumbnails()
+      title: document.querySelector('#title').value,
+      description: document.querySelector('#description').value,
+      code: document.querySelector('#code').value,
+      price: parseFloat(document.querySelector('#price').value),
+      status: document.querySelector('#status').value === 'true',
+      stock: parseInt(document.querySelector('#stock').value),
+      category: document.querySelector('#category').value,
+      thumbnails: [document.querySelector('#thumbnails').value],
     };
 
     socket.emit('newProduct', newProduct);
     productForm.reset();
-    document.getElementById('thumbnailsList').innerHTML = '';
-});
-
-// Función para obtener las URLs de imágenes
-function getThumbnails() {
-    const thumbnailsElements = document.querySelectorAll('.thumbnail-item');
-    const thumbnails = [];
-    
-    thumbnailsElements.forEach(item => {
-        thumbnails.push(item.textContent.replace('×', '').trim());
-    });
-    
-    const singleThumbnail = document.querySelector('#thumbnails').value;
-    if (singleThumbnail) {
-        thumbnails.push(singleThumbnail);
-    }
-    
-    return thumbnails;
-}
-
-// Agregar funcionalidad para múltiples imágenes
-document.getElementById('addImageBtn').addEventListener('click', () => {
-    const thumbnailInput = document.querySelector('#thumbnails');
-    const thumbnailValue = thumbnailInput.value.trim();
-    
-    if (thumbnailValue) {
-        const thumbnailsList = document.getElementById('thumbnailsList');
-        const thumbnailItem = document.createElement('div');
-        thumbnailItem.className = 'thumbnail-item';
-        thumbnailItem.textContent = thumbnailValue;
-        
-        const removeBtn = document.createElement('span');
-        removeBtn.className = 'remove-thumbnail';
-        removeBtn.textContent = '×';
-        removeBtn.addEventListener('click', () => {
-            thumbnailsList.removeChild(thumbnailItem);
-        });
-        
-        thumbnailItem.prepend(removeBtn);
-        thumbnailsList.appendChild(thumbnailItem);
-        thumbnailInput.value = '';
-    }
 });
