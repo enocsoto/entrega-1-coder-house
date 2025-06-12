@@ -37,9 +37,9 @@
             <input type="text" id="category" name="category" required minlength="3">
         </div>
         <div class="form-group">
-            <label for="text">Image URL:</label>
+            <label for="thumbnails">Image URL:</label>
             <input type="text" id="thumbnails" name="thumbnails" placeholder="Ingrese URL de imagen">
-            <button type="button" id="addImageBtn">Agregar otra imagen</button>
+            <button type="button" id="addImageBtn">Add new img</button>
             <div id="thumbnailsList"></div>
         </div>
         <button type="submit">Add Product</button>
@@ -47,8 +47,20 @@
 </div>
 
 <div id="productList" class="product-list">
-    <!-- Products will be loaded dynamically here -->
+    {{#if products}}
+        {{#each products}}
+            <div class="product-card">
+                <h3>{{title}}</h3>
+                <p>Price: ${{price}}</p>
+                <p>Stock: {{stock}}</p>
+                <p>Category: {{category}}</p>
+                <p>{{description}}</p>
+                <p class="thumbnail-item">"{{this.thumbnails.[0]}}"</p>
+            </div>
+        {{/each}}
+    {{else}}
+        <p>No products available.</p>
+    {{/if}}
 </div>
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/realtime.js"></script>

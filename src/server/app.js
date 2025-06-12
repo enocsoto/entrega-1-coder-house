@@ -70,20 +70,15 @@ export class Server {
       
       try {
         // Send initial product list to the connected client
-        const products = await this.productRepository.getAll();
-        socket.emit('products', products);
+        const result = await this.productRepository.getAllProducts();
+        socket.emit('products', result.payload); // Send just the products array
         
         // Listen for new product events
         socket.on('newProduct', async (product) => {
           try {
-            // Add the product using ProductRepository
-            await this.productRepository.create(product);
-            
-            //  Get the updated product list
-            const updatedProducts = await this.productRepository.getAll();
-            
-            // Emit the updated product list to all connected clients
-            this.io.emit('products', updatedProducts);
+            await this.productRepository.createProduct(product);
+            const updatedResult = await this.productRepository.getAllProducts();
+            this.io.emit('products', updatedResult.payload); // Send just the products array
           } catch (error) {
             console.error('Error al agregar producto:', error);
           }
@@ -92,14 +87,9 @@ export class Server {
         // Listen for delete product events
         socket.on('deleteProduct', async (productId) => {
           try {
-            // Delete the product using ProductRepository
-            await this.productRepository.delete(productId);
-            
-            // Get the updated product list
-            const updatedProducts = await this.productRepository.getAll();
-            
-            // Emit the updated product list to all connected clients
-            this.io.emit('products', updatedProducts);
+            await this.productRepository.deleteProduct(productId);
+            const updatedResult = await this.productRepository.getAllProducts();
+            this.io.emit('products', updatedResult.payload); // Send just the products array
           } catch (error) {
             console.error('Error al eliminar producto:', error);
           }
