@@ -34,7 +34,7 @@ function updateProductList(products) {
             <p><strong>Stock:</strong> ${product.stock}</p>
             <p><strong>Category:</strong> ${product.category}</p>
             ${thumbnailsHtml}
-            <button class="delete" data-id="${product.id}">Delete</button>
+            <button class="delete" data-id="${product._id}">Delete</button>
         `;
         
         productList.appendChild(productCard);
@@ -63,11 +63,8 @@ productForm.addEventListener('submit', (e) => {
         category: document.querySelector('#category').value,
         thumbnails: getThumbnails()
     };
-    
-    // Emitir evento de nuevo producto
+
     socket.emit('newProduct', newProduct);
-    
-    // Limpiar formulario
     productForm.reset();
     document.getElementById('thumbnailsList').innerHTML = '';
 });

@@ -37,6 +37,10 @@
   display: inline-block;
   margin-right: 5px;
   border: 1px solid var(--border-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 .remove-thumbnail {
@@ -95,4 +99,28 @@ select {
   font-size: 1.2rem;
   color: var(--text-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+#productForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 80%;
+  margin: 0 auto;
+}
+
+.form-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.form-group input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
 }

@@ -4,9 +4,9 @@ import { ProductController } from '../controllers/product-controller.js';
 const router = express.Router();
 const productManager = new ProductController();
 
-router.get('/', async (req, res) => {
+router.get('/products', async (req, res) => {
   try {
-    const productsData = await productManager.getAllProducts(req.query, res);
+    const productsData = await productManager.getAllProductsByWeb(req.query, res);
     res.render('home', {
       products: productsData.payload,
       home: true,
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 
 router.get('/products/:pid', async (req, res) => {
   try {
-    const product = await productManager.getProductById(req);
+    const product = await productManager.getProductByIdByWeb(req);
     
     if (!product) {
       return res.status(404).render('error', { message: 'Product not found' });
@@ -32,10 +32,10 @@ router.get('/products/:pid', async (req, res) => {
   }
 });
 
-router.get('/realtimeproducts', (_req, res) => {
-  const products = productManager.getProducts();
+router.get('/realtimeproducts', async (req, res) => {
+  const productsData = await productManager.getAllProductsByWeb(req);
   res.render('realTimeProducts', {
-    products,
+    products: productsData.payload,
     realtime: true,
   });
 });

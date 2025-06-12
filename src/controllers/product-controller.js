@@ -6,7 +6,7 @@ export class ProductController {
   async getAllProducts(req, res) {
     try {
       const result = await productService.getAllProducts(req.query);
-      return result;
+      res.status(200).json(result);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching products', error: error?.message });
     }
@@ -19,7 +19,7 @@ export class ProductController {
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
-      return product;
+      res.status(200).json(product);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching product', error: error?.message });
     }
@@ -59,6 +59,27 @@ export class ProductController {
       res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
       res.status(500).json({ message: 'Error deleting product', error: error?.message });
+    }
+  }
+  async getAllProductsByWeb(req, res) {
+    try {
+      const result = await productService.getAllProducts(req.query);
+      return result;
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching products', error: error?.message });
+    }
+  }
+
+  async getProductByIdByWeb(req, res) {
+    try {
+      const { pid } = req.params;
+      const product = await productService.getProductById(pid);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      return product;
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching product', error: error?.message });
     }
   }
 }
