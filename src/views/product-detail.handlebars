@@ -26,10 +26,8 @@
                     <li><strong>Stock:</strong> {{product.stock}}</li>
                     <li><strong>Category:</strong> {{product.category}}</li>
                 </ul>
-            </div>
-
-            <div class="product-detail-actions">
-                <button id="addToCartBtn" class="add-to-cart-btn" data-product-id="{{product.id}}" {{#unless product.status}}disabled{{/unless}}>
+            </div>            <div class="product-detail-actions">
+                <button id="addToCartBtn" class="add-to-cart-btn" data-product-id="{{product._id}}" {{#unless product.status}}disabled{{/unless}}>
                     {{#if product.status}}Add to Cart{{else}}Out of Stock{{/if}}
                 </button>
                 <a href="/products" class="back-to-products-btn">Back to Products</a>
@@ -64,9 +62,11 @@
                         },
                         body: JSON.stringify({ quantity: 1 })
                     });
-                    
-                    if (response.ok) {
-                        alert('Product added to cart successfully!');
+                      if (response.ok) {
+                        const result = confirm('Product added to cart successfully! Would you like to view your cart?');
+                        if (result) {
+                            window.location.href = `/cart/${cartId}`;
+                        }
                     } else {
                         const errorData = await response.json();
                         alert(`Error: ${errorData.message || 'Could not add product to cart'}`);

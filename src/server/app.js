@@ -11,6 +11,9 @@ import { connectDB } from '../config/db.js';
 import 'dotenv/config';
 import { fileURLToPath } from 'url';
 import { ProductService } from '../services/product-service.js';
+import { CartService } from '../services/cart-service.js';
+import { multiply, calculateTotal, eq } from '../utils/handlebars-helpers.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,7 +24,8 @@ export class Server {
     this.server = HttpServer(this.app);
     this.io = new IOServer(this.server);
     this.productRepository = new ProductService();
-    
+    this.cartRepository = new CartService(); 
+
     this.setupHandlebars();
     this.middlewares();
     this.connectToDatabase();
@@ -40,7 +44,13 @@ export class Server {
   }
 
   setupHandlebars() {
-    this.app.engine('handlebars', engine());
+    this.app.engine('handlebars', engine({
+      helpers: {
+        multiply,
+        calculateTotal,
+        eq
+      }
+    }));
     this.app.set('views', path.join(__dirname, '../views'));
     this.app.set('view engine', 'handlebars');
   }

@@ -15,12 +15,11 @@ export class CartController {
       res.status(500).json({ message: 'Error fetching Cart', error: error?.message });
     }
   }
-
   static async createCart(req, res) {
     try {
       const {products} = req.body;
       const newCart = await cartService.createCart(products);
-      res.status(201).json(newCart);
+      res.status(201).json(Array.isArray(newCart) ? newCart[0] : newCart);
     } catch (error) {
       res.status(500).json({ message: 'Error creating Cart', error: error?.message });
     }

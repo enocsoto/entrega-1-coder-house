@@ -1,5 +1,6 @@
 import { Cart, Product } from '../models/index.js';
 import { isMongoIdValid } from '../utils/validMongoIdValid.js';
+import mongoose from 'mongoose';
 
 export class CartService {
   async getCartById(id) {
@@ -14,13 +15,18 @@ export class CartService {
       throw new Error(`Error getting cart: ${error.message}`);
     }
   }
-
-  async createCart(products) {
+  async createCart(products = []) {
     try {
-      // pasar los id de productos al carrito
       if (!Array.isArray(products)) {
         throw new Error('Products must be an array');
       }
+      
+      // Si no hay productos, crear un carrito vacío
+      if (products.length === 0) {
+        const newCart = new Cart({ products: [] });
+        return await newCart.save();
+      }
+
       const cart = [];
       for (const item of products) {
         if (!item.id || !mongoose.Types.ObjectId.isValid(item.id)) {
